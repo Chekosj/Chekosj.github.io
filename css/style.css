@@ -1,0 +1,122 @@
+h1 {
+    text-align: center;
+    font-size: 500%;
+    color: white;
+    font-family: Georgia;
+}
+h4 {
+    text-align: center;
+    color: lightgrey;
+    font-size: 200%;
+    font-family: Cambria;
+}
+#header {
+    padding: 5vh;
+    background-color: black;
+    height: 100vh;
+    z-index: 6;
+}
+/*img {*/
+/*    max-height: 60vh;*/
+/*    width: auto;*/
+/*    display: block;*/
+/*    margin-left: auto;*/
+/*    margin-right: auto;*/
+/*    padding-top: 0vh;*/
+/*}*/
+svg {
+    overflow: visible;
+}
+#log {
+    height: 55vh;
+    padding-top: 5vh;
+}
+body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    color: white;
+}
+
+/*RAE ADDED*/
+#rainbow-diagram{
+    max-width: 60vw;
+    max-height:100vh;
+    margin: 0 auto;
+    /*height: 90vh;*/
+    padding-top: 30vh;
+}
+svg .seat.AI { fill: #fd8acd; }
+svg .seat.CR { fill: #ed1f24; }
+svg .seat.CS { fill: #ff6700; }
+svg .seat.DMAE { fill: #fed00d; }
+svg .seat.Fintech { fill: #55bb47; }
+svg .seat.Health { fill: #066b38; }
+svg .seat.ISSH { fill: #00b3ff; }
+svg .seat.MT { fill: #0900f9; }
+svg .seat.NSCLD { fill: #4b08a1; }
+svg .seat.Other { fill: #828085; }
+
+#area-chart {
+    height:100vh;
+    padding-top: 15vh;
+}
+#histo-chart{
+    height: 100vh;
+    padding-top: 15vh;
+}
+#map-chart {
+    height: 40vh;
+    width: 100%;
+    margin-top: 200px;
+    margin-bottom: 200px;
+    z-index:0
+}
+#map {
+    padding-top: 30vh;
+}
+#circles {
+    padding-top: 5vh;
+}
+.countries{
+    width: 100vw;
+    height: 100vh;
+}
+#circle-chart{
+    height: 100vh;
+}
+.tooltip {
+    position: absolute;
+    text-align: center;
+    font: 12px sans-serif;
+}
+.tooltip h3, h6 {
+    text-align: left;
+}
+.tooltip h6 {
+    font: 14px sans-serif;
+}
+#map {
+    padding-bottom: 1vh;
+}
+#Tooltip {
+    font-family: "Calibri Light";
+}
+h5 {
+    margin-top: 25px;
+}
+.area {
+    opacity: 1;
+    clip-path: url(#clip);
+}
+.area:hover {
+    opacity: 0.7;
+}
+
+
+/*sergio added*/
+#legend{
+    position: fixed; left: 0; right: 0; top: 0; bottom:0;
+    /*z-index: 3;*/
+    box-shadow: 100px 100px 5px black;
+}
