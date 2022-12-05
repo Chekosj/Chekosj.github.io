@@ -1,3 +1,6 @@
+/* * * * * * * * * * * * * *
+*        RainbowVis        *
+* * * * * * * * * * * * * */
 
 class RainbowVis {
 
@@ -9,6 +12,7 @@ class RainbowVis {
 
         this.initVis();
     }
+
     initVis() {
         let vis = this;
 
@@ -44,7 +48,6 @@ class RainbowVis {
             .fromCenter(false)
             .smallToBig(false);
 
-// CHANGE TO SVG
         vis.svg = d3.select('#rainbow-diagram')
             .append('svg')
             .attr('width', vis.width + vis.margin.left + vis.margin.right)
@@ -52,41 +55,10 @@ class RainbowVis {
             .append('g')
             .attr('transform', 'translate('+ vis.margin.left+ ','+ vis.margin.top + ')')
 
-        // vis.color = d3.scaleOrdinal()
-        //     .domain(vis.industryColors)
-        //     .range(vis.industryColors);
-        //
-        // console.log("color", vis.color)
-        //
-        // vis.svg.selectAll("mydots2")
-        //     .data(vis.industryColors)
-        //     .enter()
-        //     .append("circle")
-        //     .attr("cx", 50)
-        //     .attr("cy", function(d, i){ return 100 + i*25})
-        //     .attr("r", 6)
-        //     .style("fill", function(d){ return d.color})
-        //     .attr('transform', `translate(${vis.width * 2.8 / 4 - 100}, ${vis.height - 452})`)
-        //
-        //
-        //
-        // vis.svg.selectAll("mylabels2")
-        //     .data(vis.industryColors)
-        //     .enter()
-        //     .append("text")
-        //     .attr("x", 120)
-        //     .attr("y", function(d, i){ return 100 + i*25})
-        //     .style("fill", "black")
-        //     .text(function(d){return d.industry + "\n"})
-        //     .attr("text-anchor", "right")
-        //     .attr('transform', `translate(${vis.width * 2.8 / 4 - 500}, ${vis.height - 450})`)
-        //     .style("alignment-baseline", "middle")
-
         vis.tooltip = d3.select("body").append('div')
             .attr('class', "tooltip")
             .attr('id', 'mapTooltip')
 
-        //console.log('data', vis.data)
         let industries = vis.data.map(d => {
             let industryAbbrev = null;
             if (d.Industry === 'Artificial intelligence') {
@@ -116,25 +88,14 @@ class RainbowVis {
                 industryAbbrev: industryAbbrev
             }
         })
-        //console.log('indust', industries)
+
         let group = Array.from(d3.group(industries, d => d.industryAbbrev), ([id, seats]) => ({id, seats})).sort((a,b) => d3.ascending(a.id,b.id))
-
-
-        //console.log('nest',group)
 
         vis.svg.datum(group)
             .call(vis.parliament);
 
-        vis.parliament.on('click', function(e) {
-                //console.log(e);
-            })
-
         vis.color = d3.scaleOrdinal()
             .domain(vis.industryColors)
             .range(vis.industryColors);
-
-        //console.log("color", vis.color)
-
-
     }
 }

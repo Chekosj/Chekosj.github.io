@@ -1,11 +1,10 @@
+/* * * * * * * * * * * * * *
+*           Main           *
+* * * * * * * * * * * * * */
 
-
-
-// SVG drawing area
 loadData()
-let parseTime = d3.timeParse("%Y-%m-%d");
 
-//RAE ADDED
+let parseTime = d3.timeParse("%Y-%m-%d");
 let rainbowVis;
 let areaVis;
 let histoVis;
@@ -20,12 +19,10 @@ function updateAllVisualizations(){
 
 // load data using promises
 let promises = [
-    d3.json("data/airports.json"),
     d3.json("data/world-110m.json"),
     d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"),
     d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json"),
     d3.csv("data/unicorns_per_country.csv")
-    // usa data
 ];
 
 Promise.all(promises)
@@ -34,7 +31,7 @@ Promise.all(promises)
 
 // initMainPage
 function initMainPage(allDataArray) {
-    myMapVis = new MapVis('map-chart', allDataArray[4], allDataArray[2])
+    myMapVis = new MapVis('map-chart', allDataArray[3], allDataArray[1])
 }
 
 function loadData() {
@@ -53,10 +50,9 @@ function loadData() {
             d['Year Joined'] = +d['Year Joined']
             d['Years From Founding to Joined'] = +d['Years From Founding to Joined']
         });
-        let data = csv;
-        console.log(data)
 
-        // RAE ADDED
+        let data = csv;
+
         let industryColors = [
             {industry:'Artificial intelligence',color:'#fd8acd', id:5},
             {industry:'Consumer retail',color:'#ed1f24', id:3},
@@ -77,8 +73,9 @@ function loadData() {
 
     })};
 
-// This creates the rainbow background not sure if i want to keep it
+// This creates the rainbow background
 rainbowBackground()
+
 function rainbowBackground() {
     let width = document.getElementById('log').getBoundingClientRect().width;
     let height = document.getElementById('log').getBoundingClientRect().height;
@@ -89,11 +86,7 @@ function rainbowBackground() {
         .append("g")
         .attr("transform", "translate(0," + height / 2.8 + ")");
 
-    //colors = ['#1ba3c6', '#2bb79f', '#459f3b', '#dabb21', '#f88113', '#e93645', '#fe7caa', '#b36cc1', '#4f7cba']
     let colors = ['#fd8acd','#ed1f24','#ff6700','#fed00d','#55bb47', '#066b38','#00b3ff','#0900f9', '#4b08a1']
-
-
-
 
     rainbowBg = svg.selectAll('rect')
         .data(colors);
@@ -104,7 +97,6 @@ function rainbowBackground() {
         .attr('width', width * 2)
         .attr('height', height / 27)
         .attr('fill', d => d)
-    //.attr('stroke','black')
 
     svg.append('svg:image')
         .attr("xlink:href", 'images/unicorn_sketch_black_background.jpg')
@@ -113,22 +105,16 @@ function rainbowBackground() {
         .attr('height', height * .9)
         .attr('width');
 }
+
 function countryChange() {
     selectedCountry =  document.getElementById('categorySelector').value;
-    console.log('selOpt', selectedCountry)
     circleVis.wrangleData()
-    // myMapVis.wrangleData(); // maybe you need to change this slightly depending on the name of your MapVis instance
-    // myBarVisOne.wrangleData();
-    // myBarVisTwo.wrangleData();
 }
 
 fixedLegend()
 
 function fixedLegend() {
-    let width = document.getElementById('legend').getBoundingClientRect().width;
-    let height = document.getElementById('legend').getBoundingClientRect().height;
-
-
+    let width = document.getElementById('log').getBoundingClientRect().width;
     let industryColors = [
         {industry:'Artificial intelligence',color:'#fd8acd', id:5},
         {industry:'Consumer retail',color:'#ed1f24', id:3},
@@ -141,21 +127,18 @@ function fixedLegend() {
         {industry:'Supply chain, logistics, & delivery',color:'#4b08a1', id:8},
         {industry:'Other',color:'#828085', id:0}]
 
-
-
     svg = d3.select("#legend").append("svg")
         .append("g")
 
-
-    const rect = svg.append("rect")
+    svg.append("rect")
         .attr("x",20)
         .attr("y", 75)
-        .attr("width", 350)
+        .attr("width", width/(4.7))
         .attr("height", 380)
         .attr("fill", "gray")
-        .style("stroke", "black")
-        .style("stroke-width", 2)
-        .attr("opacity", .4);
+        .style("stroke", "white")
+        .style("stroke-width", 5)
+        .attr("opacity", .45);
 
     svg.selectAll("mydots")
         .data(industryColors)
@@ -166,20 +149,6 @@ function fixedLegend() {
         .attr("r", 10)
         .style("fill", function(d){ return d.color})
         .style("stroke", "black")
-        // .attr('transform', `translate(${3}, ${height})`)
-        // .on('click', function(event,d) {
-        //     console.log('dots', d)
-        //     selectedIndustry = d.industry;
-        //     // wrangleData2();
-        // })
-        .on('mouseover', function(event,d) {
-            selectedIndustry = d.industry;
-            console.log(d)
-            console.log('aread', selectedIndustry)
-            // selectedIndustry = selectedIndustry
-            histoVis.wrangleData2();
-        })
-
 
     svg.selectAll("mylabels")
         .data(industryColors)
@@ -191,10 +160,6 @@ function fixedLegend() {
         .style("font-weight", 500)
         .text(function(d){return d.industry + "\n"})
         .attr("text-anchor", "right")
-        // .attr('transform', `translate(${-100}, ${height})`)
         .style("alignment-baseline", "middle")
-
-
-
 }
 

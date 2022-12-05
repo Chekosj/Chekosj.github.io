@@ -12,6 +12,7 @@ class CircleVis {
     initVis(){
         let vis = this;
 
+        // Create the svg and positioning components
         vis.margin = {bottom: 10, top: 10, right: 10, left: 10}
 
         vis.width = document.getElementById('circles').getBoundingClientRect().width - vis.margin.left - vis.margin.right;
@@ -28,26 +29,11 @@ class CircleVis {
             .attr('class', "tooltip")
             .attr('id', 'Tooltip')
 
-        let legendColors = [
-            {industry:'Artificial intelligence',color:'#fd8acd', id:5},
-            {industry:'Consumer retail',color:'#ed1f24', id:3},
-            {industry:'Cybersecurity',color:'#ff6700', id:7},
-            {industry:'Data management & analytics, Edtech',color:'#fed00d', id:6},
-            {industry:'Fintech',color:'#55bb47', id:1},
-            {industry:'Health',color:'#066b38', id:4},
-            {industry:'Internet software & services, Hardware',color:'#00b3ff', id:2},
-            {industry:'Mobile & telecommunications',color:'#0900f9', id:9},
-            {industry:'Supply chain, logistics, & delivery',color:'#4b08a1', id:8},
-            {industry:'Other',color:'#828085', id:0}]
-
-        vis.color = d3.scaleOrdinal()
-            .domain(legendColors)
-            .range(legendColors);
-
-        // Scale for circles
+        // Scale for circles area
         vis.circleRad = d3.scaleSqrt()
             .range([0, 20]);
 
+        // Create separate svg for the circle size scale
         let margin2 = {bottom: 10, top: 10, right: 10, left: 10}
 
         let width2 = document.getElementById('circleLeg').getBoundingClientRect().width - margin2.left - margin2.right;
@@ -59,8 +45,10 @@ class CircleVis {
             .append("g")
             .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
+        // Circle radius sizes for legend
         vis.legendCircleRadii = [5,10,15,20]
 
+        // Append cicles to the legend
         vis.legCircles = vis.svg2.selectAll("legend-circle")
             .data(vis.legendCircleRadii)
             .enter()
@@ -74,37 +62,27 @@ class CircleVis {
             .style('opacity',1)
             .style("stroke-width", 1);
 
+        // Create a scale for the valuation
         vis.valScale = d3.scaleOrdinal().range([0,width2])
 
         vis.valAxis = d3.axisBottom()
             .scale(vis.valScale)
             .tickFormat(x => x);
 
-
         vis.wrangleData()
     }
-
 
     wrangleData(){
         let vis = this;
 
-        //filter Data
-        let country = selectedCountry
-        // if (selectedCountry === 'United States of America') {
-        //     country = 'United States'
-        // }
-        // else {
-        //     country = selectedCountry
-        // }
-        //console.log('country', country)
-        // Filter data to country
-        vis.displayData = vis.data.filter((f) => f.Country === country)
+        //filter Data by selected country
+        vis.displayData = vis.data.filter((f) => f.Country === selectedCountry)
 
         // Provides number of companies per industry
         let count = Array.from(d3.rollup(vis.displayData, f => f.length, f => f.Industry),([industry,count])=>({industry,count}))
-        //console.log('COUNT', count)
 
-        // Sort industry colors by count and append circle radius
+        // Add industry count to industry colors
+        // if count is zero make it a large number so that it will be one of the invisible outer circles
         vis.industryColors.forEach(function(d,) {
             if (count.filter(e => e.industry === d.industry).length > 0) {
                 /* vendors contains the element we're looking for */
@@ -114,19 +92,21 @@ class CircleVis {
                 d['count'] = 2000
             }
         })
-        // Sort industry colors by count
+        // Sort industry colors by count in descending order
         vis.industryColors.sort((a,b) => d3.descending(a.count, b.count))
 
+        // Dynamically generate background circle radius based on div width
         vis.circleRadii= []
         vis.industryColors.forEach(function(d,i) {
-            vis.circleRadii.push(((vis.width/2.1)/10) * (10-i))
+            vis.circleRadii.push(((vis.width/2.5)/10) * (10-i))
         })
-        //console.log('radiuses', radiuses)
-        //vis.circleRadii = [ 300,270, 240, 210, 180, 150, 120, 90, 60, 30]
+
+        // Append background circle radius to industry colors
         vis.industryColors.forEach(function (d,i) {
             d['radius'] = vis.circleRadii[i]
         })
-        //console.log('INDUSTRY COLORS', vis.industryColors)
+
+        // get x and y coordinates for company circles using
         let coordinates = []
         vis.counter = 0
         vis.industryColors.forEach(function (d) {
@@ -142,48 +122,45 @@ class CircleVis {
                     let theta = (360 / d.count) * (i) + (offset * index) //+ 5 * index)
                     let cord = {
                         x: (d.radius * Math.cos(theta * (Math.PI / 180))) + vis.width / 2,
-                        y: (d.radius * Math.sin(theta * (Math.PI / 180))) + vis.height / 3
+                        y: (d.radius * Math.sin(theta * (Math.PI / 180))) + vis.height / 2.25
                     }
                     coordinates.push(cord)
                 }
             }
         })
-        //console.log('CORD', coordinates)
+
+        // Create an ordered list of industries by count
         let sortedIndustries = vis.industryColors.map(d => d.industry)
-        //console.log('SORT', sortedIndustries)
+
+        // Sort country data by industry according to sorted industry and company valuation
         this.displayData.sort((a, b) => (sortedIndustries.indexOf(a.Industry) - sortedIndustries.indexOf(b.Industry) || a['Valuation ($B)'] -  b['Valuation ($B)']));
+
+        // Append (x,y) coordinates and color to each company observation
         this.displayData.forEach(function(d,index){
             d['x'] = coordinates[index].x
             d['y'] = coordinates[index].y
             d['color'] = vis.industryColors.find(c => c.industry === d.Industry).color
         })
-        //console.log('displayData', vis.displayData)
-        // if (selectedCountry === '') {
-        //     vis.displayData = []
-        // }
-        // else {
-        //     vis.displayData = vis.displayData
-        // }
+
         vis.updateVis();
     }
 
-    updateVis(){
-
+    updateVis() {
         let vis = this;
+
+        // set the domain of the circle radius based on max valuation of company within selected country
         vis.circleRad.domain([0, d3.max(vis.displayData, d => d['Valuation ($B)'])]);
+
+        // Create axis for circle size scale
         let invertedLegCircles = [0]
         vis.legendCircleRadii.forEach(d => invertedLegCircles.push(Math.round(vis.circleRad.invert(d))))
-        console.log('invertlist', invertedLegCircles)
         vis.valScale.domain(invertedLegCircles)
         vis.svg2.select(".val-axis").call(vis.valAxis);
 
-
-        //console.log('scale_test', vis.circleRad(vis.displayData[0]['Valuation ($B)']))
-        //let colors = ['#fd8acd','#ed1f24','#ff6700','#fed00d','#55bb47', '#066b38','#00b3ff','#0900f9', '#4b08a1', '#828085']
-
+        // time formatter for tool tip
         let formatTime = d3.timeFormat("%m/%d/%y")
 
-        // Black background circles
+        // Creates grey background circles for each industry
         vis.bgCircles = vis.svg.selectAll(".bgCircles")
             .data(vis.circleRadii.slice(-vis.counter));
 
@@ -193,15 +170,16 @@ class CircleVis {
             .append("circle")
             .attr('class',"bgCircles")
             .merge(vis.bgCircles)
-            .transition()
             .attr("cx", vis.width/2)
-            .attr("cy", vis.height/3)
+            .attr("cy", vis.height/2.25)
+            .transition()
             .attr("r", d => d)
             .style("stroke", 'grey')
             .style("fill", "none" )
             .style('opacity', .4)
             .style("stroke-width", 1);
 
+        // Appends circles to svg for all companies within a country
         vis.ctryCircles = vis.svg.selectAll(".ctryCircles")
             .data(vis.displayData)
 
@@ -217,34 +195,168 @@ class CircleVis {
             .attr('stroke', d => d.color)
             .attr('opacity', 0.8)
             .attr('r', d => vis.circleRad(d['Valuation ($B)']))
+
+        // Appends opaque circles on top of current circles to help use select circles of smaller area
+        vis.clickCircles = vis.svg.selectAll(".clickCircles")
+            .data(vis.displayData)
+
+        vis.clickCircles.exit().remove()
+
+        vis.clickCircles.enter()
+            .append("circle")
+            .attr('class', 'clickCircles')
+            .merge(vis.clickCircles)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr('fill', d => d.color)
+            .attr('stroke', d => d.color)
+            .attr('opacity', 0)
+            .attr('r', function (d) {
+                if (vis.circleRad(d['Valuation ($B)']) < 6) {
+                    return 6
+                }
+                else {
+                    return vis.circleRad(d['Valuation ($B)'])
+                }
+            })
             .on('mouseover', function (event, d) {
-                d3.select(this)
-                    .attr('stroke', 'black')
-                vis.tooltip.style("opacity", 1)
-                    .style("left", event.pageX + 20 + "px")
-                    .style("top", event.pageY + "px")
-                    .html(`
+                vis.circleHover(d[""])
+                if (d.x < vis.width/2 && d.y < vis.height/2) {
+                    vis.tooltip.style("opacity", 1)
+                        .style('right',5+ '%')
+                        .style("left", event.pageX -30 +"px")
+                        .style("top", event.pageY+ "px")
+                        .html(`
                      <div style="border: thin solid #bf80ff; border-radius: 5px; background:  #f2e6ff; padding: 20px">
-                         <h2><strong>${d.Company}</strong><h2>
-                         <h3>Valuation ($B): ${d['Valuation ($B)']}</h3>
-                         <h3> Location: ${d.City}, ${d.Country}</h3>
-                         <h3> Select Investors: ${d['Select Inverstors']}</h3>
-                          <h3> Year Founded: ${d['Founded Year']}</h3>
-                          <h3> Date Joined: ${formatTime(d['Date Joined'])}</h3>
+                     <h6><strong><center>${d.Company}</center></strong></h6>
+                     <h6><strong>Valuation ($B): </strong>${d['Valuation ($B)']}</h6>
+                     <h6><strong>Location: </strong>${d.City}, ${d.Country}</h6>
+                     <h6><strong>Select Investors: </strong>${d['Select Inverstors']}</h6>
+                     <h6><strong>Year Founded: </strong>${d['Founded Year']}</h6>
+                     <h6><strong>Date Joined: </strong>${formatTime(d['Date Joined'])}</h6>
                      </div>`);
+                }
+                else if (d.x>vis.width/2 && d.y < vis.height/2) {
+                    vis.tooltip.style("opacity", 1)
+                        .style('right', 5 + '%')
+                        .style('left', vis.width*1.5+'px')
+                        .style("top", event.pageY+ "px")
+                        .html(`
+                     <div style="border: thin solid #bf80ff; border-radius: 5px; background:  #f2e6ff; padding: 20px">
+                     <h6><strong><center>${d.Company}</center></strong></h6>
+                     <h6><strong>Valuation ($B): </strong>${d['Valuation ($B)']}</h6>
+                     <h6><strong>Location: </strong>${d.City}, ${d.Country}</h6>
+                     <h6><strong>Select Investors: </strong>${d['Select Inverstors']}</h6>
+                     <h6><strong>Year Founded: </strong>${d['Founded Year']}</h6>
+                     <h6><strong>Date Joined: </strong>${formatTime(d['Date Joined'])}</h6>
+                     </div>`);
+                }
+                else if (d.x < vis.width/2 && d.y > vis.height/2) {
+                    vis.tooltip.style("opacity", 1)
+                        .style('right', 5 + '%')
+                        .style('left', event.pageX +"px")
+                        .style("top", event.pageY - vis.height/3+ "px")
+                        .html(`
+                     <div style="border: thin solid #bf80ff; border-radius: 5px; background:  #f2e6ff; padding: 20px">
+                     <h6><strong><center>${d.Company}</center></strong></h6>
+                     <h6><strong>Valuation ($B): </strong>${d['Valuation ($B)']}</h6>
+                     <h6><strong>Location: </strong>${d.City}, ${d.Country}</h6>
+                     <h6><strong>Select Investors: </strong>${d['Select Inverstors']}</h6>
+                     <h6><strong>Year Founded: </strong>${d['Founded Year']}</h6>
+                     <h6><strong>Date Joined: </strong>${formatTime(d['Date Joined'])}</h6>
+                     </div>`);
+                }
+                else{
+                    vis.tooltip.style("opacity", 1)
+                        .style('right', 5 + '%')
+                        .style('left', vis.width*1.5+'px')
+                        .style("top", event.pageY - vis.height/3+ "px")
+                        .html(`
+                     <div style="border: thin solid #bf80ff; border-radius: 5px; background:  #f2e6ff; padding: 20px">
+                     <h6><strong><center>${d.Company}</center></strong></h6>
+                     <h6><strong>Valuation ($B): </strong>${d['Valuation ($B)']}</h6>
+                     <h6><strong>Location: </strong>${d.City}, ${d.Country}</h6>
+                     <h6><strong>Select Investors: </strong>${d['Select Inverstors']}</h6>
+                     <h6><strong>Year Founded: </strong>${d['Founded Year']}</h6>
+                     <h6><strong>Date Joined: </strong>${formatTime(d['Date Joined'])}</h6>
+                     </div>`);
+                }
             })
             .on('mouseout', function (event, d) {
-                d3.select(this)
-                    .attr('stroke', d => d.color)
+                vis.circleUnhover()
                 vis.tooltip
                     .style("opacity", 0)
                     .style("left", 0)
                     .style("top", 0)
-                    .html(``)
-                ;
+                    .html(``);
             })
-
     }
 
+    // Highlights circle when hovering
+    circleHover(index){
+        let vis = this;
+        vis.ctryCircles = vis.svg.selectAll(".ctryCircles")
+            .data(vis.displayData)
 
+        vis.ctryCircles.exit().remove()
+
+        vis.ctryCircles.enter()
+            .append("circle")
+            .attr('class', 'ctryCircles')
+            .merge(vis.ctryCircles)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr('fill', function(d) {
+                if (d[""] === index) {
+                    return 'white'
+                }
+                else {
+                    return d.color
+                }
+            })
+            .attr('stroke', function(d) {
+                if (d[""] === index) {
+                    return 'white'
+                }
+                else {
+                    return d.color
+                }
+            })
+            .attr('opacity', function(d) {
+                if (d[""] === index) {
+                    return 1
+                }
+                else {
+                    return 0.8
+                }
+            })
+            .attr('r', d => vis.circleRad(d['Valuation ($B)']))
+            .on('mouseover', function (event, d) {
+                d3.select(this)
+                    .attr('stroke', 'white')
+                    .attr('fill', 'white')
+                    .attr('stroke-width',3)
+                    .attr('opacity', 1)
+            })
+    }
+
+    // Un-highlights circle when no longer hovering
+    circleUnhover(){
+        let vis = this;
+        vis.ctryCircles = vis.svg.selectAll(".ctryCircles")
+            .data(vis.displayData)
+
+        vis.ctryCircles.exit().remove()
+
+        vis.ctryCircles.enter()
+            .append("circle")
+            .attr('class', 'ctryCircles')
+            .merge(vis.ctryCircles)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr('fill', d => d.color)
+            .attr('stroke', d => d.color)
+            .attr('opacity', 0.8)
+            .attr('r', d => vis.circleRad(d['Valuation ($B)']))
+    }
 }

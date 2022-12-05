@@ -2,27 +2,6 @@
 *          MapVis          *
 * * * * * * * * * * * * * */
 
-/*mapVisNew();
-
-let unicorn_array = [];
-
-function mapVisNew() {
-    d3.csv("data/unicorns_per_country.csv", (row) => {
-        // convert
-        row.Unicorns = +row.Unicorns
-        return row
-    }).then(csv => {
-        let data = csv;
-        console.log(data);
-        data.forEach(d=>{
-                console.log(d);
-                unicorn_array[d['Country']] = d['Unicorns']
-            }
-        )
-    })
-}
-convert string to number*/
-
 class MapVis {
 
     constructor(parentElement, data, geoData) {
@@ -36,8 +15,7 @@ class MapVis {
         )
 
         // define colors
-        //this.colors = ['#d9f2d9', '#9fdf9f', '#2d862d', '#194d19']
-        this.colors = ['#d9d9d9', '#969696', '#737373', '#525252', '#000000']
+        this.colors = ['#d9d9d9', 'rgb(170,170,170)']
 
         this.initVis()
     }
@@ -60,33 +38,56 @@ class MapVis {
             .attr('class', 'title')
             .attr('id', 'map-title')
             .append('text')
-            .text('Unicorn Spottings')
+            .text('')
             .attr('transform', `translate(${vis.width / 2}, 20)`)
             .attr('text-anchor', 'middle');
 
         // add color legend
-        vis.legend = vis.svg.append("g")
-            .attr('class', 'legend')
-            .attr('transform', `translate(${vis.width * 2.8 / 4 - 250}, ${(vis.height + 100)})`)
-
-        vis.legendScale = d3.scaleLinear()
+        vis.mapScale = d3.scaleLinear()
             .range(vis.colors)
-            .domain([0, 4])
+            .domain([0, 7])
 
-        vis.legendAxis = d3.axisBottom()
-            .scale(vis.legendScale)
-            .ticks(0)
-
-
-        //rectangle
-        const rect = vis.svg.append("rect")
+        vis.svg.append("rect")
             .attr("x",-vis.width)
-            .attr("y", -vis.height)
+            .attr("y",-vis.height-100)
             .attr("width", vis.width*4)
-            .attr("height", vis.height*3)
+            .attr("height", vis.height*3.2)
             .attr("fill", "black")
             .attr("opacity", 1);
 
+        vis.svg.append("text")
+            .attr('class', "h5")
+            .attr("x",vis.width/2)
+            .attr("y",-vis.height-50)
+            .attr("fill", "white")
+            .attr("opacity", 1)
+            .style("font-size", 27)
+            .attr('text-anchor','middle')
+            .text("Global Unicorn Sightings");
+
+        vis.svg.append("text")
+            .attr("x",vis.width/2)
+            .attr("y",-vis.height-10)
+            .attr("fill", "white")
+            .attr("opacity", 1)
+            .attr('text-anchor','middle')
+            .text("While learning more about the nature of unicorns can be intriguing, but it's even more ");
+
+        vis.svg.append("text")
+            .attr("x",vis.width/2)
+            .attr("y",-vis.height+15)
+            .attr("fill", "white")
+            .attr("opacity", 1)
+            .attr('text-anchor','middle')
+            .text("exciting to discover where these unicorns can be found. Hover the cursor over the map ");
+
+        vis.svg.append("text")
+            .attr("x",vis.width/2)
+            .attr("y",-vis.height+40)
+            .attr("fill", "white")
+            .attr("opacity", 1)
+            .attr('text-anchor','middle')
+            .text("to discover which countries lead the world in unicorn population.");
 
         // tooltip
         vis.tooltip = d3.select("body").append('div')
@@ -99,14 +100,13 @@ class MapVis {
 
         // Change display
         vis.projection = d3.geoNaturalEarth1() // d3.geoStereographic()
-            .translate([vis.width / 2, vis.height / 2])
-            .scale(249.5 * vis.zoom) // 249.5 is default. so multiply that by your zoom
+            .translate([vis.width / 2, vis.height / 3])
+            .scale(230 * vis.zoom) // 249.5 is default. so multiply that by your zoom
             .rotate(vis.rotate);
 
         // path provider
         vis.path = d3.geoPath()
             .projection(vis.projection);
-
 
         vis.svg.append("path")
             .datum(
@@ -117,14 +117,12 @@ class MapVis {
             .attr("stroke", "#FFFFFF")
             .attr("d", vis.path);
 
-
         vis.svg.append("path")
             .datum(d3.geoGraticule())
             .attr("class", "graticule")
             .attr('fill', '#FFFFFF')
             .attr("stroke", "#FFFFFF")
             .attr("d", vis.path);
-
 
         // Convert TopoJSON to GeoJSON (target object = 'states')
         let world = topojson.feature(vis.geoData, vis.geoData.objects.countries).features
@@ -135,18 +133,57 @@ class MapVis {
             .attr('class', 'country')
             .attr("d", vis.path)
 
-        //
         let m0,
             o0;
 
-        vis.wrangleData()
+        let legendColors = [
+            {industry:'Number of Unicorns',color:'#000000', id:5},
+            {industry:'',color:'#000000', id:5},
+            {industry:'0',color:'#DCDCDC', id:5},
+            {industry:'1',color:'#d3d3d3', id:3},
+            {industry:'2',color:'#C8C8C8', id:7},
+            {industry:'3',color:'#BEBEBE', id:6},
+            {industry:'4',color:'#B0B0B0', id:1},
+            {industry:'5',color:'#A8A8A8', id:4},
+            {industry:'6',color:'#989898', id:2},
+            {industry:'7',color:'#888888', id:9},
+            {industry:'12',color:'#707070', id:8},
+            {industry:'16',color:'#686868', id:0},
+            {industry:'19',color:'#585858', id:0},
+            {industry:'20',color:'#484848', id:0},
+            {industry:'24',color:'#383838', id:0},
+            {industry:'42+',color:'#000000', id:0}]
 
+        vis.svg.selectAll("mydots")
+            .data(legendColors)
+            .enter()
+            .append("rect")
+            .attr('width', 40)
+            .attr('height', 20)
+            .attr("x", (d, i) => vis.width/30 + i * vis.width/16)
+            .attr("y", vis.height * 1.6)
+            .style("stroke", (d, i) => {
+                if(i > 1) {return "white";} else {return "black";}
+            })
+            .attr('fill', d => d.color)
+
+        vis.svg.selectAll("mylabels")
+            .data(legendColors)
+            .enter()
+            .append("text")
+            .attr('x', (d, i) => vis.width/30 + 20 + i * vis.width/16)
+            .attr('y', vis.height * 1.6 - 15)
+            .style("fill", "white")
+            .text(function(d){return d.industry + "\n"})
+            .attr("text-anchor", "middle")
+            .style("alignment-baseline", "middle")
+
+        vis.wrangleData()
     }
 
     wrangleData() {
         let vis = this;
 
-        // put unicorn_array here?
 
         // create random data structure with information for each land
         vis.countryInfo = {};
@@ -156,7 +193,7 @@ class MapVis {
             vis.countryInfo[d.properties.name] = {
                 name: d.properties.name,
                 category: 'category_' + Math.floor(numberOfUnicorns),
-                color: vis.legendScale(vis.unicorn_array[d.properties.name]),
+                color: vis.mapScale(vis.unicorn_array[d.properties.name]),
                 value: numberOfUnicorns / 4 * 100
             }
         })
@@ -164,28 +201,14 @@ class MapVis {
         vis.updateVis()
     }
 
-
     updateVis() {
         let vis = this;
 
-        console.log(vis.countryInfo)
-
         vis.countries
             .on('mouseover', function (event, d) {
-                console.log(event);
                 selectedCountry = d.properties.name
-                //circleVis.wrangleData()
                 d3.select(this)
                     .attr("fill", '#bf80ff')
-                //.attr("stroke", '#bf80ff')
-                //.attr("stroke-width", 1)
-
-                //let airport = vis.airportData[Math.floor(Math.random()*vis.airportData.length)]
-
-                console.log(vis.unicorn_array)
-                console.log(d)
-                console.log(vis.unicorn_array[d.properties.name])
-                //if(d.properties.name in vis.unicorn_array){console.log(vis.unicorn_array)}else{console.log("missing")}
                 let unicorns = "";
                 if(d.properties.name in vis.unicorn_array) {
                     unicorns = vis.unicorn_array[d.properties.name];
@@ -201,16 +224,11 @@ class MapVis {
                             <h3>${d.properties.name}<h3> 
                             <h6>Number of Unicorns: ${unicorns}</h6>
                         </div>`);
-                /*<h6> Number of Unicorns: ${Math.floor(Math.random()*20)}</h6>*/
-                /*<h3>${unicorn_array.Country}<h3>
-                <h6>Number of Unicorns: ${unicorn_array.Unicorns}</h6>*/
 
             })
             .on('mouseout', function (event, d) {
                 selectedCountry = ''
-                //circleVis.wrangleData()
                 d3.select(this)
-                    //.attr('fill', d => vis.legendScale(vis.countryInfo[d.properties.name].color))
                     .attr('fill', d => vis.countryInfo[d.properties.name].color)
                     .attr("stroke", 'white')
                     .attr("stroke-width", 0.5)
@@ -222,37 +240,8 @@ class MapVis {
             })
             .transition()
             .duration(500)
-            //.attr('fill', d => vis.legendScale(vis.countryInfo[d.properties.name].color))
             .attr('fill', d => vis.countryInfo[d.properties.name].color)
             .attr("stroke", 'white')
             .attr("stroke-width", 0.5)
-
-
-        // BONUS
-
-        /*       let airports = vis.svg.selectAll('.airport').data(vis.airportData.nodes)
-
-                airports.exit().remove()
-                airports.enter().append('circle')
-                    .attr('class', 'airport')
-                    .merge(airports)
-                    .attr('cx', d => vis.projection([d.longitude, d.latitude])[0])
-                    .attr('cy', d => vis.projection([d.longitude, d.latitude])[1])
-                    //.attr('cx', d => vis.projection())
-                    .attr('r', function (d,i) {
-                        return 5
-                    })
-
-                let connections = vis.svg.selectAll(".connection")
-                    .data(vis.airportData.links)
-
-                connections.exit().remove()
-                connections.enter().append("line")
-                    .attr("class", "connection")
-                    .attr("x1", function(d) { return vis.projection([vis.airportData.nodes[d.source].longitude, vis.airportData.nodes[d.source].latitude])[0]; })
-                    .attr("y1", function(d) { return vis.projection([vis.airportData.nodes[d.source].longitude, vis.airportData.nodes[d.source].latitude])[1]; })
-                    .attr("x2", function(d) { return vis.projection([vis.airportData.nodes[d.target].longitude, vis.airportData.nodes[d.target].latitude])[0]; })
-                    .attr("y2", function(d) { return vis.projection([vis.airportData.nodes[d.target].longitude, vis.airportData.nodes[d.target].latitude])[1]; });
-            */
     }
 }
